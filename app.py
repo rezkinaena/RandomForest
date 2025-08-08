@@ -106,9 +106,16 @@ if st.button("Prediksi"):
     }
 
     processed_input = preprocess_input(input_data)
+    
+    # Prediksi kelas
     prediction = model.predict(processed_input)[0]
+    
+    # Prediksi probabilitas
+    prediction_proba = model.predict_proba(processed_input)[0]  # [prob_class0, prob_class1]
 
     st.info(f"🔢 Hasil Prediksi Model: **{prediction}**")
+    st.write(f"📊 Probabilitas Tidak Memesan (0): **{prediction_proba[0]*100:.2f}%**")
+    st.write(f"📊 Probabilitas Memesan (1): **{prediction_proba[1]*100:.2f}%**")
 
     if prediction == 1:
         st.success("✅ Interpretasi: Pelanggan kemungkinan akan memesan makanan online.")
