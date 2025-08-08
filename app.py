@@ -79,3 +79,4 @@ if st.button("Prediksi"):
         st.success("Ditemukan ✅" if pred == 1 else "Tidak Ditemukan ❌")
     except Exception as e:
         st.error(f"Terjadi kesalahan saat memproses: {e}")
+
