@@ -21,9 +21,11 @@ dataset = load_data()
 # ========================
 def preprocess_input(input_data):
     df = dataset.copy()
-    required_columns = ['Age', 'Gender', 'Marital Status', 'Occupation',
-                        'Monthly Income', 'Educational Qualifications',
-                        'Family size']
+    required_columns = [
+    'Age', 'Gender', 'Marital Status', 'Occupation',
+    'Monthly Income', 'Educational Qualifications',
+    'Family size', 'Pin code', 'Feedback', 'Output'
+]
 
     # Gabungkan input user ke dataset asli untuk encoding konsisten
     df = pd.concat([df[required_columns], pd.DataFrame([input_data])], ignore_index=True)
@@ -102,3 +104,4 @@ if st.button("Prediksi"):
         st.success("✅ Pelanggan kemungkinan akan memesan makanan online.")
     else:
         st.warning("❌ Pelanggan kemungkinan tidak akan memesan makanan online.")
+
