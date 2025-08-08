@@ -3,42 +3,61 @@ import pandas as pd
 import joblib
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 
-# === Load model ===
-model = joblib.load('best_model.pkl')
+# === KONFIGURASI ===
+# Ganti link di bawah dengan link RAW CSV di GitHub kamu
+CSV_URL = "https://raw.githubusercontent.com/username/repo/main/onlinefoods.csv"
 
-# === Load dataset untuk encoder & scaler ===
-dataset = pd.read_csv('onlinefoods.csv')
+# Nama file model
+MODEL_FILE = "best_model.pkl"
 
-fitur_wajib = [
+# Kolom yang digunakan saat training
+FITUR_WAJIB = [
     'Age', 'Gender', 'Marital Status', 'Occupation', 'Monthly Income',
     'Educational Qualifications', 'Family size', 'latitude', 'longitude', 'Pin code'
 ]
-dataset = dataset[fitur_wajib]
 
-# Label encoding
+FITUR_NUMERIK = ['Age', 'Family size', 'latitude', 'longitude', 'Pin code']
+
+# === LOAD MODEL ===
+model = joblib.load(MODEL_FILE)
+
+# === LOAD DATASET UNTUK ENCODER & SCALER ===
+dataset = pd.read_csv(CSV_URL)
+dataset = dataset[FITUR_WAJIB].copy()
+
+# Buat label encoders
 label_encoders = {}
 for kolom in dataset.select_dtypes(include=['object']).columns:
     le = LabelEncoder()
-    dataset[kolom] = le.fit_transform(dataset[kolom].astype(str))
+    dataset[kolom] = dataset[kolom].astype(str)
+    dataset[kolom] = le.fit_transform(dataset[kolom])
     label_encoders[kolom] = le
 
-# Scaling numerik
+# Buat scaler
 scaler = StandardScaler()
-fitur_numerik = ['Age', 'Family size', 'latitude', 'longitude', 'Pin code']
-dataset[fitur_numerik] = scaler.fit_transform(dataset[fitur_numerik])
+dataset[FITUR_NUMERIK] = scaler.fit_transform(dataset[FITUR_NUMERIK])
 
-# === Fungsi proses input ===
+# === FUNGSI PROSES INPUT ===
 def proses_input(user_data):
     df = pd.DataFrame([user_data])
+
+    # Transform label encoding
     for kolom in label_encoders:
-        df[kolom] = label_encoders[kolom].transform(df[kolom])
-    df[fitur_numerik] = scaler.transform(df[fitur_numerik])
+        if kolom in df.columns:
+            df[kolom] = label_encoders[kolom].transform(df[kolom])
+
+    # Transform scaling numerik
+    df[FITUR_NUMERIK] = scaler.transform(df[FITUR_NUMERIK])
+
+    # Pastikan urutan kolom sama seperti training
+    df = df[FITUR_WAJIB]
+
     return df
 
-# === Streamlit App ===
+# === STREAMLIT UI ===
 st.title("Prediksi Keberadaan Pelanggan")
 
-# Input singkat
+# Input user
 user_input = {
     'Age': st.number_input('Usia', 18, 100),
     'Gender': st.selectbox('Jenis Kelamin', label_encoders['Gender'].classes_),
@@ -54,6 +73,9 @@ user_input = {
 
 # Tombol prediksi
 if st.button("Prediksi"):
-    data_terproses = proses_input(user_input)
-    pred = model.predict(data_terproses)[0]
-    st.success("Ditemukan" if pred == 1 else "Tidak Ditemukan")
+    try:
+        data_terproses = proses_input(user_input)
+        pred = model.predict(data_terproses)[0]
+        st.success("Ditemukan ✅" if pred == 1 else "Tidak Ditemukan ❌")
+    except Exception as e:
+        st.error(f"Terjadi kesalahan saat memproses: {e}")
