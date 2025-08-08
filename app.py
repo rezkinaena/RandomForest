@@ -22,14 +22,15 @@ dataset = load_data()
 def preprocess_input(input_data):
     df = dataset.copy()
     required_columns = [
-    'Age', 'Gender', 'Marital Status', 'Occupation',
-    'Monthly Income', 'Educational Qualifications',
-    'Family size', 'Pin code', 'Feedback', 'Output'
-]
+        'Age', 'Gender', 'Marital Status', 'Occupation',
+        'Monthly Income', 'Educational Qualifications',
+        'Family size', 'Pin code', 'Feedback', 'Output'
+    ]
 
     # Gabungkan input user ke dataset asli untuk encoding konsisten
     df = pd.concat([df[required_columns], pd.DataFrame([input_data])], ignore_index=True)
 
+    # Encoding kategori ke angka
     for col in df.select_dtypes(include=['object']).columns:
         df[col] = df[col].astype('category').cat.codes
 
@@ -76,7 +77,7 @@ st.markdown("""
 st.title("🍔 Prediksi Pelanggan Online Food Service 📦")
 st.write("Isi data di bawah ini untuk memprediksi apakah pelanggan akan memesan makanan online.")
 
-# Input Form
+# Form Input
 age = st.number_input("Umur", min_value=10, max_value=100, value=25)
 gender = st.selectbox("Jenis Kelamin", dataset["Gender"].unique())
 marital_status = st.selectbox("Status Pernikahan", dataset["Marital Status"].unique())
@@ -84,8 +85,12 @@ occupation = st.selectbox("Pekerjaan", dataset["Occupation"].unique())
 income = st.selectbox("Pendapatan Bulanan", dataset["Monthly Income"].unique())
 education = st.selectbox("Kualifikasi Pendidikan", dataset["Educational Qualifications"].unique())
 family_size = st.number_input("Ukuran Keluarga", min_value=1, max_value=20, value=3)
+pin_code = st.number_input("Kode Pos", min_value=10000, max_value=999999, value=123456)
+feedback = st.selectbox("Feedback", dataset["Feedback"].unique())
 
-# Prediksi
+# ========================
+# 5. Prediction
+# ========================
 if st.button("Prediksi"):
     input_data = {
         'Age': age,
@@ -94,14 +99,18 @@ if st.button("Prediksi"):
         'Occupation': occupation,
         'Monthly Income': income,
         'Educational Qualifications': education,
-        'Family size': family_size
+        'Family size': family_size,
+        'Pin code': pin_code,
+        'Feedback': feedback,
+        'Output': 0  # placeholder
     }
 
     processed_input = preprocess_input(input_data)
     prediction = model.predict(processed_input)[0]
 
-    if prediction == 1:
-        st.success("✅ Pelanggan kemungkinan akan memesan makanan online.")
-    else:
-        st.warning("❌ Pelanggan kemungkinan tidak akan memesan makanan online.")
+    st.info(f"🔢 Hasil Prediksi Model: **{prediction}**")
 
+    if prediction == 1:
+        st.success("✅ Interpretasi: Pelanggan kemungkinan akan memesan makanan online.")
+    else:
+        st.warning("❌ Interpretasi: Pelanggan kemungkinan tidak akan memesan makanan online.")
