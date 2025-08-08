@@ -1,82 +1,75 @@
 import streamlit as st
 import pandas as pd
 import joblib
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+import numpy as np
 
-# === KONFIGURASI ===
-# Ganti link di bawah dengan link RAW CSV di GitHub kamu
-CSV_URL = "https://raw.githubusercontent.com/username/repo/main/onlinefoods.csv"
+# ========================
+# 1. Load Model & Dataset
+# ========================
+@st.cache_resource
+def load_model():
+    return joblib.load("best_model.pkl")
 
-# Nama file model
-MODEL_FILE = "best_model.pkl"
+@st.cache_data
+def load_data():
+    return pd.read_csv("onlinefoods.csv")
 
-# Kolom yang digunakan saat training
-FITUR_WAJIB = [
-    'Age', 'Gender', 'Marital Status', 'Occupation', 'Monthly Income',
-    'Educational Qualifications', 'Family size', 'latitude', 'longitude', 'Pin code'
-]
+model = load_model()
+dataset = load_data()
 
-FITUR_NUMERIK = ['Age', 'Family size', 'latitude', 'longitude', 'Pin code']
+# ========================
+# 2. Preprocessing Helper
+# ========================
+def preprocess_input(input_data):
+    # Copy dataset untuk ambil encoder dari data asli
+    df = dataset.copy()
 
-# === LOAD MODEL ===
-model = joblib.load(MODEL_FILE)
+    # Pastikan urutan kolom sesuai saat training
+    required_columns = ['Age', 'Gender', 'Marital Status', 'Occupation',
+                        'Monthly Income', 'Educational Qualifications',
+                        'Family size']
 
-# === LOAD DATASET UNTUK ENCODER & SCALER ===
-dataset = pd.read_csv(CSV_URL)
-dataset = dataset[FITUR_WAJIB].copy()
+    # Gabungkan input user ke dataset
+    df = pd.concat([df[required_columns], pd.DataFrame([input_data])], ignore_index=True)
 
-# Buat label encoders
-label_encoders = {}
-for kolom in dataset.select_dtypes(include=['object']).columns:
-    le = LabelEncoder()
-    dataset[kolom] = dataset[kolom].astype(str)
-    dataset[kolom] = le.fit_transform(dataset[kolom])
-    label_encoders[kolom] = le
+    # Encode data kategorik
+    for col in df.select_dtypes(include=['object']).columns:
+        df[col] = df[col].astype('category').cat.codes
 
-# Buat scaler
-scaler = StandardScaler()
-dataset[FITUR_NUMERIK] = scaler.fit_transform(dataset[FITUR_NUMERIK])
+    # Ambil baris terakhir (input user)
+    processed = df.iloc[-1].values.reshape(1, -1)
+    return processed
 
-# === FUNGSI PROSES INPUT ===
-def proses_input(user_data):
-    df = pd.DataFrame([user_data])
+# ========================
+# 3. Streamlit UI
+# ========================
+st.title("Prediksi Pelanggan Online Food Service 🍔📦")
 
-    # Transform label encoding
-    for kolom in label_encoders:
-        if kolom in df.columns:
-            df[kolom] = label_encoders[kolom].transform(df[kolom])
+st.write("Isi data di bawah ini untuk memprediksi apakah pelanggan akan memesan makanan online.")
 
-    # Transform scaling numerik
-    df[FITUR_NUMERIK] = scaler.transform(df[FITUR_NUMERIK])
+age = st.number_input("Umur", min_value=10, max_value=100, value=25)
+gender = st.selectbox("Jenis Kelamin", dataset["Gender"].unique())
+marital_status = st.selectbox("Status Pernikahan", dataset["Marital Status"].unique())
+occupation = st.selectbox("Pekerjaan", dataset["Occupation"].unique())
+income = st.selectbox("Pendapatan Bulanan", dataset["Monthly Income"].unique())
+education = st.selectbox("Kualifikasi Pendidikan", dataset["Educational Qualifications"].unique())
+family_size = st.number_input("Ukuran Keluarga", min_value=1, max_value=20, value=3)
 
-    # Pastikan urutan kolom sama seperti training
-    df = df[FITUR_WAJIB]
-
-    return df
-
-# === STREAMLIT UI ===
-st.title("Prediksi Keberadaan Pelanggan")
-
-# Input user
-user_input = {
-    'Age': st.number_input('Usia', 18, 100),
-    'Gender': st.selectbox('Jenis Kelamin', label_encoders['Gender'].classes_),
-    'Marital Status': st.selectbox('Status Pernikahan', label_encoders['Marital Status'].classes_),
-    'Occupation': st.selectbox('Pekerjaan', label_encoders['Occupation'].classes_),
-    'Monthly Income': st.selectbox('Pendapatan Bulanan', label_encoders['Monthly Income'].classes_),
-    'Educational Qualifications': st.selectbox('Pendidikan', label_encoders['Educational Qualifications'].classes_),
-    'Family size': st.number_input('Jumlah Keluarga', 1, 20),
-    'latitude': st.number_input('Latitude', format="%.6f"),
-    'longitude': st.number_input('Longitude', format="%.6f"),
-    'Pin code': st.number_input('Kode Pos', 1, 999999)
-}
-
-# Tombol prediksi
 if st.button("Prediksi"):
-    try:
-        data_terproses = proses_input(user_input)
-        pred = model.predict(data_terproses)[0]
-        st.success("Ditemukan ✅" if pred == 1 else "Tidak Ditemukan ❌")
-    except Exception as e:
-        st.error(f"Terjadi kesalahan saat memproses: {e}")
+    input_data = {
+        'Age': age,
+        'Gender': gender,
+        'Marital Status': marital_status,
+        'Occupation': occupation,
+        'Monthly Income': income,
+        'Educational Qualifications': education,
+        'Family size': family_size
+    }
 
+    processed_input = preprocess_input(input_data)
+    prediction = model.predict(processed_input)[0]
+
+    if prediction == 1:
+        st.success("✅ Pelanggan kemungkinan akan memesan makanan online.")
+    else:
+        st.warning("❌ Pelanggan kemungkinan tidak akan memesan makanan online.")
