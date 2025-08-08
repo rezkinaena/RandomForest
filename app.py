@@ -37,47 +37,39 @@ def preprocess_input(input_data):
     return df.iloc[-1].values.reshape(1, -1)
 
 # ========================
-# 3. CSS Pastel Peach-Pink-Mint 🌸🍑🍃
+# 3. CSS Soft Pastel Theme
 # ========================
 st.markdown("""
     <style>
     body {
-        background-color: #fffaf6;
-        color: #444444;
-        font-family: 'Poppins', sans-serif;
+        background-color: #fff8f0;
+        color: #333333;
     }
     .stApp {
-        background-color: #fffaf6;
+        background-color: #fffaf5;
     }
     h1 {
-        color: #ff8fa3;
+        color: #ff8fab;
         text-align: center;
-        font-weight: 800;
     }
-    /* Tombol */
     .stButton button {
-        background: linear-gradient(135deg, #ffd6a5, #ffcad4, #caffbf);
-        color: #444;
-        border-radius: 12px;
-        padding: 0.6em 1.2em;
+        background-color: #a8e6cf;
+        color: #1d3557;
+        border-radius: 10px;
+        padding: 0.6em 1em;
         font-weight: bold;
         border: none;
-        box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
-        transition: 0.3s ease-in-out;
     }
     .stButton button:hover {
-        background: linear-gradient(135deg, #ffb5a7, #ff99ac, #a3f7bf);
+        background-color: #ffb5a7;
         color: white;
-        transform: scale(1.05);
     }
-    /* Label */
     .stSelectbox label, .stNumberInput label {
-        color: #ff99ac;
+        color: #6d6875;
         font-weight: bold;
     }
-    /* Info Box */
-    .stAlert {
-        border-radius: 10px;
+    .stInfo, .stSuccess, .stWarning {
+        font-size: 16px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -85,8 +77,9 @@ st.markdown("""
 # ========================
 # 4. Streamlit UI
 # ========================
-st.title("🌸🍑🍃 Prediksi Pelanggan Online Food Service 🍃🍑🌸")
+st.title("🍔 Prediksi Pelanggan Online Food Service 📦")
 st.write("Isi data di bawah ini untuk memprediksi apakah pelanggan akan memesan makanan online.")
+st.caption("📌 Keterangan Label: **0 = Tidak Memesan**, **1 = Memesan**")
 
 # Form Input
 age = st.number_input("Umur", min_value=10, max_value=100, value=25)
@@ -102,7 +95,7 @@ feedback = st.selectbox("Feedback", dataset["Feedback"].unique())
 # ========================
 # 5. Prediction
 # ========================
-if st.button("💡 Prediksi Sekarang!"):
+if st.button("🔮 Prediksi"):
     input_data = {
         'Age': age,
         'Gender': gender,
@@ -122,13 +115,13 @@ if st.button("💡 Prediksi Sekarang!"):
     prediction = model.predict(processed_input)[0]
     
     # Prediksi probabilitas
-    prediction_proba = model.predict_proba(processed_input)[0]  # [prob_class0, prob_class1]
+    prediction_proba = model.predict_proba(processed_input)[0]
 
-    st.info(f"🔢 Hasil Prediksi Model: **{prediction}**")
-    st.write(f"📊 Probabilitas Tidak Memesan (0): **{prediction_proba[0]*100:.2f}%**")
-    st.write(f"📊 Probabilitas Memesan (1): **{prediction_proba[1]*100:.2f}%**")
+    st.info(f"🔢 **Hasil Prediksi Model**: {prediction}  \n📌 (0 = Tidak Memesan, 1 = Memesan)")
+    st.write(f"🍃 Probabilitas **Tidak Memesan (0)**: **{prediction_proba[0]*100:.2f}%**")
+    st.write(f"🌸 Probabilitas **Memesan (1)**: **{prediction_proba[1]*100:.2f}%**")
 
     if prediction == 1:
-        st.success("🌸 Pelanggan kemungkinan akan memesan makanan online.")
+        st.success("✅ Interpretasi: Pelanggan kemungkinan **akan** memesan makanan online.")
     else:
-        st.warning("🍑 Pelanggan kemungkinan tidak akan memesan makanan online.")
+        st.warning("❌ Interpretasi: Pelanggan kemungkinan **tidak akan** memesan makanan online.")
