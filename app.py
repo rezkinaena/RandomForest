@@ -135,7 +135,8 @@ if st.button("💡 Prediksi Sekarang!"):
     st.write(f"📊 Probabilitas Memesan (1): **{prediction_proba[1]*100:.2f}%**")
 
     if prediction == 1:
-        st.success("🌸 Pelanggan kemungkinan akan memesan makanan online.")
+        st.success("Pelanggan kemungkinan akan memesan makanan online.")
     else:
-        st.warning("🍑 Pelanggan kemungkinan tidak akan memesan makanan online.")
+        st.warning("Pelanggan kemungkinan tidak akan memesan makanan online.")
+
 
