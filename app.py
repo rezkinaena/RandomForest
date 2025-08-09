@@ -85,7 +85,7 @@ st.markdown("""
 # ========================
 # 4. Streamlit UI
 # ========================
-st.title("🌸🍑🍃 Prediksi Pelanggan Online Food Service 🍃🍑🌸")
+st.title("Prediksi Pelanggan Online Food Service")
 st.write("Isi data di bawah ini untuk memprediksi apakah pelanggan akan memesan makanan online.")
 
 # Form Input
@@ -138,3 +138,4 @@ if st.button("💡 Prediksi Sekarang!"):
         st.success("🌸 Pelanggan kemungkinan akan memesan makanan online.")
     else:
         st.warning("🍑 Pelanggan kemungkinan tidak akan memesan makanan online.")
+
